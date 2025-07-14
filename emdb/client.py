@@ -1,3 +1,7 @@
+import pandas
+
+from io import StringIO
+
 from emdb.exceptions import EMDBInvalidIDError, EMDBNotFoundError, EMDBAPIError
 from emdb.models.entry import EMDBEntry
 from emdb.models.search import EMDBSearchResults
@@ -56,4 +60,29 @@ class EMDBClient:
             return EMDBSearchResults.from_api(data, self)
         except Exception as e:
             raise EMDBAPIError(f"Search failed: {str(e)}")
+
+    @fixed_sleep_rate_limit(0.5)
+    def csv_search(self, query: str, fields: str = "emdb_id,structure_determination_method,resolution") -> "pandas.DataFrame":
+        """
+        Perform a search returning the results in a CSV table (Pandas dataframe).
+
+        :param query: The search query string.
+        :param fields: Comma-separated list of fields to return.
+        :return: A DataFrame containing the search results.
+        :raises EMDBAPIError: For API-related errors.
+        """
+        endpoint = f"/search/{query}"
+        params = {
+            "rows": 1000000,
+            "wt": "csv",
+            "download": "false"
+        }
+        if fields:
+            params["fl"] = fields
+
+        try:
+            data = make_request(endpoint, params=params, restype="csv")
+            return pandas.read_csv(StringIO(data))
+        except Exception as e:
+            raise EMDBAPIError(f"Raw search failed: {str(e)}")
 
