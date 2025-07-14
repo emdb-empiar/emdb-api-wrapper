@@ -4,7 +4,7 @@ from emdb.exceptions import (
 )
 
 
-def make_request(endpoint: str, params=None):
+def make_request(endpoint: str, params=None, restype="json"):
     url = f"https://www.ebi.ac.uk/emdb/api{endpoint}"
     try:
         response = requests.get(url, params=params, timeout=10)
@@ -15,7 +15,10 @@ def make_request(endpoint: str, params=None):
         elif response.status_code >= 500:
             raise EMDBAPIError("Server error", response.status_code, url)
         response.raise_for_status()
-        return response.json()
+        if restype == "csv":
+            return response.text.strip()
+        else:
+            return response.json()
     except requests.Timeout:
         raise EMDBNetworkError(f"Request timed out while accessing {url}")
     except requests.exceptions.RequestException as e:

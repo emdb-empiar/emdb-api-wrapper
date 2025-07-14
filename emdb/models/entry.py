@@ -67,4 +67,4 @@ class EMDBEntry(BaseModel):
         )
 
     def __str__(self):
-        return f"EMDBEntry(id={self.id}, method={self.method}, resolution={self.resolution})"
+        return f"<EMDBEntry id={self.id}, method={self.method}, resolution={self.resolution}>"

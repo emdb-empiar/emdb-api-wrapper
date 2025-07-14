@@ -1,5 +1,6 @@
 from emdb.exceptions import EMDBInvalidIDError, EMDBNotFoundError, EMDBAPIError
 from emdb.models.entry import EMDBEntry
+from emdb.models.search import EMDBSearchResults
 from emdb.utils import make_request
 
 
@@ -33,4 +34,25 @@ class EMDBClient:
             raise e
         except Exception as e:
             raise EMDBAPIError(f"Failed to retrieve entry {emdb_id}: {str(e)}")
+
+    def search(self, query: str) -> "EMDBSearchResults":
+        """
+        Search for EMDB entries using a query string.
+
+        :param query: The search query string.
+        :return: An EMDBSearchResults object containing the search results.
+        :raises EMDBAPIError: For API-related errors.
+        """
+        endpoint = f"/search/{query}"
+        params = {
+            "rows": 1000000,
+            "fl": "emdb_id",
+            "wt": "csv",
+            "download": "false"
+        }
+        try:
+            data = make_request(endpoint, params=params, restype="csv")
+            return EMDBSearchResults.from_api(data, self)
+        except Exception as e:
+            raise EMDBAPIError(f"Search failed: {str(e)}")
 
