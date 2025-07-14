@@ -1,7 +1,24 @@
+import time
+
 import requests
 from emdb.exceptions import (
     EMDBAPIError, EMDBNotFoundError, EMDBRateLimitError, EMDBNetworkError
 )
+
+
+def fixed_sleep_rate_limit(min_interval_seconds: float):
+    last_call = [0]
+
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            elapsed = time.time() - last_call[0]
+            if elapsed < min_interval_seconds:
+                time.sleep(min_interval_seconds - elapsed)
+            result = func(*args, **kwargs)
+            last_call[0] = time.time()
+            return result
+        return wrapper
+    return decorator
 
 
 def make_request(endpoint: str, params=None, restype="json"):

@@ -1,7 +1,7 @@
 from emdb.exceptions import EMDBInvalidIDError, EMDBNotFoundError, EMDBAPIError
 from emdb.models.entry import EMDBEntry
 from emdb.models.search import EMDBSearchResults
-from emdb.utils import make_request
+from emdb.utils import make_request, fixed_sleep_rate_limit
 
 
 class EMDBClient:
@@ -13,6 +13,7 @@ class EMDBClient:
         entry = client.get_entry("EMD-1234")
     """
 
+    @fixed_sleep_rate_limit(0.2)
     def get_entry(self, emdb_id: str) -> EMDBEntry:
         """
         Retrieve an EMDB entry by its ID.
