@@ -1,6 +1,8 @@
 from typing import Optional, TYPE_CHECKING, Dict, List
-
 from pydantic import BaseModel, PrivateAttr
+import re
+
+from emdb.models.plots import PlotDataXY, PlotDataHistogram, PlotFSC
 
 if TYPE_CHECKING:
     from emdb.client import EMDBClient
@@ -132,8 +134,10 @@ class EMDBModelScore(BaseModel):
         colors = score_data.get("color", {})
         combined_residues = []
         for r, c, s in zip(residues, colors, scores):
-            chain_pos, aa = r.split()  # "A:335", "THR"
-            chain, pos = chain_pos.split(":")  # "A", "335"
+            match = re.match(r"([A-Za-z0-9]+):(\d+)\s*([A-Za-z0-9]+)", r)
+            if not match:
+                raise ValueError(f"Unexpected residue format: {r}")
+            chain, pos, aa = match.groups()
             combined_residues.append({
                 'chain': chain,
                 'position': int(pos),
@@ -192,6 +196,101 @@ class EMDBValidationScores(BaseModel):
                 f"smoc={self.smoc}, qscore={self.qscore}>")
 
 
+class EMDBValidationPlots(BaseModel):
+    """
+    Represents the plots for an EMDB validation entry.
+    """
+    density_distribution: Optional[PlotDataXY] = None
+    rawmap_density_distribution: Optional[PlotDataXY] = None
+    rotationally_averaged_power_spectrum: Optional[PlotDataXY] = None
+    rawmap_rotationally_averaged_power_spectrum: Optional[PlotDataXY] = None
+    masked_local_res_histogram: Optional[PlotDataHistogram] = None
+    unmasked_local_res_histogram: Optional[PlotDataHistogram] = None
+    fsc: Optional[PlotFSC]
+    mmfsc: Optional[List[PlotFSC]]
+    rawmap_mmcif: Optional[List[PlotFSC]]
+
+    @classmethod
+    def from_api(cls, data: Dict) -> "EMDBValidationPlots":
+        def extract_plot(obj: Optional[Dict], title: str, x_label: str, y_label: str) -> Optional[PlotDataXY]:
+            if obj and "x" in obj and "y" in obj:
+                return PlotDataXY(x=obj["x"], y=obj["y"], title=title, x_label=x_label, y_label=y_label)
+            return None
+
+        def extract_hist(obj: Optional[Dict], title: str, x_label: str, y_label: str) -> Optional[PlotDataHistogram]:
+            if obj and "values" in obj and "counts" in obj:
+                return PlotDataHistogram(values=obj["values"], counts=obj["counts"], title=title, x_label=x_label, y_label=y_label)
+            return None
+
+        def extract_fsc(obj: Optional[Dict], graph_type: str = "FSC") -> Optional[PlotFSC]:
+            pdb_id = None
+            if obj:
+                if graph_type == "FSC":
+                    title = "FSC"
+                    if "relion_fsc" in obj:
+                        fsc_data = obj["relion_fsc"]
+                    elif "fsc" in obj:
+                        fsc_data = obj["fsc"]
+                    else:
+                        return None
+                elif graph_type == "MMFSC":
+                    pdb_id = obj.get("name", "").split(".")[0]
+                    title = f"MMFSC for {pdb_id}"
+                    fsc_data = obj.get("data", {})
+                else:
+                    return None
+
+                curves = fsc_data.get("curves", {})
+
+                final_obj = PlotFSC(
+                    type=graph_type,
+                    fsc=curves.get("fsc", []),
+                    onebit=curves.get("onebit", []),
+                    halfbit=curves.get("halfbit", []),
+                    cutoff_0_5=curves.get("0.5", []),
+                    cutoff_0_143=curves.get("0.143", []),
+                    level=curves.get("level", []),
+                    angstrom_resolution=curves.get("angstrom_resolution", None),
+                    phaserandomization=curves.get("phaserandomization", None),
+                    fsc_masked=curves.get("fsc_masked", None),
+                    fsc_corrected=curves.get("fsc_corrected", None),
+                    intersections=fsc_data.get("intersections", {}),
+                    feature_zones=fsc_data.get("feature_zones", None),
+                    title=title,
+                    x_label="Spatial Frequency (1/Å)",
+                    y_label="Correlation",
+                )
+                if pdb_id:
+                    final_obj.pdb_id = pdb_id
+
+                return final_obj
+            return None
+
+        return cls(
+            density_distribution=extract_plot(data.get("density_distribution"), "Density distribution", "Voxel Value", "Number of voxels"),
+            rawmap_density_distribution=extract_plot(data.get("rawmap_density_distribution"), "Rawmap Density distribution", "Voxel Value", "Number of voxels"),
+            rotationally_averaged_power_spectrum=extract_plot(data.get("rotationally_averaged_power_spectrum"), "RAPS", "Spatial Frequency (1/Å)", "Intensity"),
+            rawmap_rotationally_averaged_power_spectrum=extract_plot(data.get("rawmap_rotationally_averaged_power_spectrum"), "Rawmap RAPS", "Spatial Frequency (1/Å)", "Intensity"),
+            masked_local_res_histogram=extract_hist(data.get("local_res_histogram", {}).get("masked", {}), "Masked Local Resolution Histogram", "Local Resolution (Å)", "Count"),
+            unmasked_local_res_histogram=extract_hist(data.get("local_res_histogram", {}).get("unmasked", {}), "Unmasked Local Resolution Histogram", "Local Resolution (Å)", "Count"),
+            fsc=extract_fsc(data, "FSC"),
+            mmfsc=[extract_fsc(mmfsc_data, "MMFSC") for mmfsc_data in data.get("mmfsc", {}).values() if isinstance(mmfsc_data, dict)],
+            rawmap_mmcif=[extract_fsc(rawmap_data, "MMFSC") for rawmap_data in data.get("raw_mmfsc", {}).values() if isinstance(rawmap_data, dict)],
+        )
+
+    def __str__(self):
+        # Return just the class name and booleans showing the attributes that are set
+        return (f"<EMDBValidationPlots "
+                f"density_distribution={self.density_distribution is not None}, "
+                f"rawmap_density_distribution={self.rawmap_density_distribution is not None}, "
+                f"rotationally_averaged_power_spectrum={self.rotationally_averaged_power_spectrum is not None}, "
+                f"rawmap_rotationally_averaged_power_spectrum={self.rawmap_rotationally_averaged_power_spectrum is not None}, "
+                f"masked_local_res_histogram={self.masked_local_res_histogram is not None}, "
+                f"unmasked_local_res_histogram={self.unmasked_local_res_histogram is not None}, "
+                f"fsc={self.fsc is not None}>"
+        )
+
+
 class EMDBValidation(BaseModel):
     """
     Represents the validation information for an EMDB entry.
@@ -201,8 +300,7 @@ class EMDBValidation(BaseModel):
     recommended_contour_level: Optional[Dict[str, float]]
     general: EMDBValidationGeneral
     scores: EMDBValidationScores
-    # fsc: dict
-    # plots: dict
+    plots: EMDBValidationPlots
     _client: Optional["EMDBClient"] = PrivateAttr(default=None)
 
     @classmethod
@@ -230,17 +328,11 @@ class EMDBValidation(BaseModel):
             resolution=resolution,
             recommended_contour_level=recc_contour_level,
             general=EMDBValidationGeneral.from_api(data),
-            scores=EMDBValidationScores.from_api(data)
+            scores=EMDBValidationScores.from_api(data),
+            plots=EMDBValidationPlots.from_api(data),
         )
         obj._client = client
         return obj
 
     def __str__(self):
         return f"<EMDBValidation id={self.id}, resolution={self.resolution}, recommended_contour_level={self.recommended_contour_level}>"
-
-
-
-
-
-
-
