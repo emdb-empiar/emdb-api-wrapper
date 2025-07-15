@@ -1,6 +1,6 @@
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
 
 from emdb.models.lazy_entry import LazyEMDBEntry
 
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 class EMDBSearchResults(BaseModel):
     entries: List[LazyEMDBEntry]
-    _client: "EMDBClient"
+    _client: Optional["EMDBClient"] = PrivateAttr(default=None)
 
     class Config:
         arbitrary_types_allowed = True
@@ -23,10 +23,11 @@ class EMDBSearchResults(BaseModel):
         # Skip the header line and parse the rest
         emdb_ids = lines[1:]
 
-        return cls(
-            entries=[LazyEMDBEntry(emdb_id, client) for emdb_id in emdb_ids],
-            _client=client,
+        obj = cls(
+            entries=[LazyEMDBEntry(emdb_id, client) for emdb_id in emdb_ids]
         )
+        obj._client = client
+        return obj
 
     def __iter__(self):
         return iter(self.entries)

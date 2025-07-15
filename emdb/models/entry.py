@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Dict, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
 
 if TYPE_CHECKING:
     from emdb.client import EMDBClient
@@ -19,7 +19,7 @@ class EMDBEntry(BaseModel):
     primary_map: Dict
     additional_files: Dict
 
-    _client: "EMDBClient" = None  # private attribute
+    _client: Optional["EMDBClient"] = PrivateAttr(default=None)
 
     @classmethod
     def from_api(cls, data: dict, client: "EMDBClient") -> "EMDBEntry":
@@ -51,7 +51,7 @@ class EMDBEntry(BaseModel):
         except KeyError:
             related_pdb_ids = []
 
-        return cls(
+        obj = cls(
             id=data["emdb_id"],
             method=method,
             resolution=resolution,
@@ -62,9 +62,24 @@ class EMDBEntry(BaseModel):
             sample=data.get("sample", {}),
             structure_determination_list=data.get("structure_determination_list", {}).get("structure_determination", []),
             primary_map=data.get("map", {}),
-            additional_files=data.get("interpretation", {}),
-            _client=client
+            additional_files=data.get("interpretation", {})
         )
+        obj._client = client
+        return obj
+
+
+    def get_validation(self) -> Optional["EMDBValidation"]:
+        """
+        Retrieve the validation data for this EMDB entry.
+
+        :return: An instance of EMDBValidation if available, otherwise None.
+        """
+        print("Retrieving validation data for EMDB entry:", self.id)
+        print("Client:", self._client)
+        if self._client:
+            print(self.id)
+            return self._client.get_validation(self.id)
+        return None
 
     def __str__(self):
         return f"<EMDBEntry id={self.id}, method={self.method}, resolution={self.resolution}>"

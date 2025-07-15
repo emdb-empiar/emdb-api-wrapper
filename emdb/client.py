@@ -1,3 +1,5 @@
+import traceback
+
 import pandas
 
 from io import StringIO
@@ -5,6 +7,7 @@ from io import StringIO
 from emdb.exceptions import EMDBInvalidIDError, EMDBNotFoundError, EMDBAPIError
 from emdb.models.entry import EMDBEntry
 from emdb.models.search import EMDBSearchResults
+from emdb.models.validation import EMDBValidation
 from emdb.utils import make_request, fixed_sleep_rate_limit
 
 
@@ -34,11 +37,33 @@ class EMDBClient:
         endpoint = f"/entry/{emdb_id}"
         try:
             data = make_request(endpoint)
-            return EMDBEntry.from_api(data, self)
+            return EMDBEntry.from_api(data, client=self)
         except EMDBNotFoundError as e:
             raise e
         except Exception as e:
+            traceback_str = traceback.format_exc()
+            print(traceback_str)
             raise EMDBAPIError(f"Failed to retrieve entry {emdb_id}: {str(e)}")
+
+    @fixed_sleep_rate_limit(0.2)
+    def get_validation(self, emdb_id: str) -> "EMDBValidation":
+        """
+        Retrieve the validation data for a given EMDB entry.
+
+        :param emdb_id: The EMDB ID of the entry to retrieve validation data for.
+        :return: An EMDBValidation object containing the validation data.
+        :raises EMDBNotFoundError: If the entry is not found.
+        :raises EMDBAPIError: For API-related errors.
+        """
+        endpoint = f"/analysis/{emdb_id}"
+        params = {"information": "all"}
+        try:
+            data = make_request(endpoint, params=params)
+            return EMDBValidation.from_api(emdb_id, data, self)
+        except EMDBNotFoundError as e:
+            raise e
+        except Exception as e:
+            raise EMDBAPIError(f"Failed to retrieve validation for {emdb_id}: {str(e)}")
 
     def search(self, query: str) -> "EMDBSearchResults":
         """
