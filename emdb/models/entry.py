@@ -8,8 +8,8 @@ if TYPE_CHECKING:
 
 class EMDBEntry(BaseModel):
     id: str
-    method: Optional[str]
-    resolution: Optional[float]
+    method: Optional[str] = None
+    resolution: Optional[float] = None
     admin: Dict
     citations: Dict
     related_emdb_ids: List[Dict]
@@ -66,7 +66,6 @@ class EMDBEntry(BaseModel):
         )
         obj._client = client
         return obj
-
 
     def get_validation(self) -> Optional["EMDBValidation"]:
         """

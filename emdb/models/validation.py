@@ -2,7 +2,7 @@ from typing import Optional, TYPE_CHECKING, Dict, List
 from pydantic import BaseModel, PrivateAttr
 import re
 
-from emdb.models.plots import PlotDataXY, PlotDataHistogram, PlotFSC
+from emdb.models.plots import PlotDataXY, PlotDataHistogram, PlotFSC, PlotVolumeEstimate
 
 if TYPE_CHECKING:
     from emdb.client import EMDBClient
@@ -12,10 +12,10 @@ class EMDBValidationGeneral(BaseModel):
     """
     Represents general validation information for an EMDB entry.
     """
-    volume_estimate: Optional[dict]
-    model_map_ratio: Optional[dict]
-    model_volume: Optional[dict]
-    surface_ratio: Optional[dict]
+    volume_estimate: Optional[dict] = None
+    model_map_ratio: Optional[dict] = None
+    model_volume: Optional[dict] = None
+    surface_ratio: Optional[dict] = None
     rawmap_contour_level: Optional[float] = None
 
     @classmethod
@@ -165,10 +165,10 @@ class EMDBValidationScores(BaseModel):
     """
     Represents the scores for an EMDB validation entry.
     """
-    ccc: Optional[List[EMDBModelScore]]
-    atom_inclusion: Optional[List[EMDBModelScore]]
-    smoc: Optional[List[EMDBModelScore]]
-    qscore: Optional[List[EMDBModelScore]]
+    ccc: Optional[List[EMDBModelScore]] = None
+    atom_inclusion: Optional[List[EMDBModelScore]] = None
+    smoc: Optional[List[EMDBModelScore]] = None
+    qscore: Optional[List[EMDBModelScore]] = None
 
     @classmethod
     def from_api(cls, data: Dict) -> "EMDBValidationScores":
@@ -204,22 +204,34 @@ class EMDBValidationPlots(BaseModel):
     rawmap_density_distribution: Optional[PlotDataXY] = None
     rotationally_averaged_power_spectrum: Optional[PlotDataXY] = None
     rawmap_rotationally_averaged_power_spectrum: Optional[PlotDataXY] = None
+    volume_estimate: Optional[PlotVolumeEstimate] = None
     masked_local_res_histogram: Optional[PlotDataHistogram] = None
     unmasked_local_res_histogram: Optional[PlotDataHistogram] = None
-    fsc: Optional[PlotFSC]
-    mmfsc: Optional[List[PlotFSC]]
-    rawmap_mmcif: Optional[List[PlotFSC]]
+    fsc: Optional[PlotFSC] = None
+    mmfsc: Optional[List[PlotFSC]] = None
+    rawmap_mmcif: Optional[List[PlotFSC]] = None
+    _recommended_contour_level: Optional[Dict[str, float]] = PrivateAttr(default=None)
+    _resolution: Optional[float] = PrivateAttr(default=None)
 
     @classmethod
-    def from_api(cls, data: Dict) -> "EMDBValidationPlots":
-        def extract_plot(obj: Optional[Dict], title: str, x_label: str, y_label: str) -> Optional[PlotDataXY]:
+    def from_api(cls, data: Dict, rcl: Dict[str, float] = None, res: float = None) -> "EMDBValidationPlots":
+        def extract_plot(obj: Optional[Dict], title: str, x_label: str, y_label: str, show_cl: bool = False, show_res: bool = False) -> Optional[PlotDataXY]:
             if obj and "x" in obj and "y" in obj:
+                if show_cl:
+                    return PlotDataXY(x=obj["x"], y=obj["y"], recommended_contour_level=rcl, title=title, x_label=x_label, y_label=y_label)
+                elif show_res:
+                    return PlotDataXY(x=obj["x"], y=obj["y"], resolution=res, title=title, x_label=x_label, y_label=y_label)
                 return PlotDataXY(x=obj["x"], y=obj["y"], title=title, x_label=x_label, y_label=y_label)
             return None
 
         def extract_hist(obj: Optional[Dict], title: str, x_label: str, y_label: str) -> Optional[PlotDataHistogram]:
             if obj and "values" in obj and "counts" in obj:
                 return PlotDataHistogram(values=obj["values"], counts=obj["counts"], title=title, x_label=x_label, y_label=y_label)
+            return None
+
+        def extract_vol_estimate(obj: Optional[Dict], title: str, x_label: str, y_label: str) -> Optional[PlotVolumeEstimate]:
+            if obj and "volume" in obj and "level" in obj and "estvolume" in obj:
+                return PlotVolumeEstimate(volume=obj["volume"], level=obj["level"], estimated_volume=obj["estvolume"], recommended_contour_level=rcl, title=title, x_label=x_label, y_label=y_label)
             return None
 
         def extract_fsc(obj: Optional[Dict], graph_type: str = "FSC") -> Optional[PlotFSC]:
@@ -250,6 +262,7 @@ class EMDBValidationPlots(BaseModel):
                     cutoff_0_5=curves.get("0.5", []),
                     cutoff_0_143=curves.get("0.143", []),
                     level=curves.get("level", []),
+                    resolution=res,
                     angstrom_resolution=curves.get("angstrom_resolution", None),
                     phaserandomization=curves.get("phaserandomization", None),
                     fsc_masked=curves.get("fsc_masked", None),
@@ -258,7 +271,7 @@ class EMDBValidationPlots(BaseModel):
                     feature_zones=fsc_data.get("feature_zones", None),
                     title=title,
                     x_label="Spatial Frequency (1/Å)",
-                    y_label="Correlation",
+                    y_label="Correlation"
                 )
                 if pdb_id:
                     final_obj.pdb_id = pdb_id
@@ -266,17 +279,21 @@ class EMDBValidationPlots(BaseModel):
                 return final_obj
             return None
 
-        return cls(
-            density_distribution=extract_plot(data.get("density_distribution"), "Density distribution", "Voxel Value", "Number of voxels"),
-            rawmap_density_distribution=extract_plot(data.get("rawmap_density_distribution"), "Rawmap Density distribution", "Voxel Value", "Number of voxels"),
-            rotationally_averaged_power_spectrum=extract_plot(data.get("rotationally_averaged_power_spectrum"), "RAPS", "Spatial Frequency (1/Å)", "Intensity"),
-            rawmap_rotationally_averaged_power_spectrum=extract_plot(data.get("rawmap_rotationally_averaged_power_spectrum"), "Rawmap RAPS", "Spatial Frequency (1/Å)", "Intensity"),
+        class_obj = cls(
+            density_distribution=extract_plot(data.get("density_distribution"), "Density distribution", "Voxel Value", "Number of voxels", show_cl=True),
+            rawmap_density_distribution=extract_plot(data.get("rawmap_density_distribution"), "Rawmap Density distribution", "Voxel Value", "Number of voxels", show_cl=True),
+            rotationally_averaged_power_spectrum=extract_plot(data.get("rotationally_averaged_power_spectrum"), "RAPS", "Spatial Frequency (1/Å)", "Intensity", show_res=True),
+            rawmap_rotationally_averaged_power_spectrum=extract_plot(data.get("rawmap_rotationally_averaged_power_spectrum"), "Rawmap RAPS", "Spatial Frequency (1/Å)", "Intensity", show_res=True),
+            volume_estimate=extract_vol_estimate(data.get("volume_estimate"), "Volume Estimate", "Contour Level", "Volume (nm³)"),
             masked_local_res_histogram=extract_hist(data.get("local_res_histogram", {}).get("masked", {}), "Masked Local Resolution Histogram", "Local Resolution (Å)", "Count"),
             unmasked_local_res_histogram=extract_hist(data.get("local_res_histogram", {}).get("unmasked", {}), "Unmasked Local Resolution Histogram", "Local Resolution (Å)", "Count"),
             fsc=extract_fsc(data, "FSC"),
             mmfsc=[extract_fsc(mmfsc_data, "MMFSC") for mmfsc_data in data.get("mmfsc", {}).values() if isinstance(mmfsc_data, dict)],
             rawmap_mmcif=[extract_fsc(rawmap_data, "MMFSC") for rawmap_data in data.get("raw_mmfsc", {}).values() if isinstance(rawmap_data, dict)],
         )
+        class_obj._recommended_contour_level = rcl
+        class_obj._resolution = res
+        return class_obj
 
     def __str__(self):
         # Return just the class name and booleans showing the attributes that are set
@@ -329,7 +346,7 @@ class EMDBValidation(BaseModel):
             recommended_contour_level=recc_contour_level,
             general=EMDBValidationGeneral.from_api(data),
             scores=EMDBValidationScores.from_api(data),
-            plots=EMDBValidationPlots.from_api(data),
+            plots=EMDBValidationPlots.from_api(data, rcl=recc_contour_level, res=resolution),
         )
         obj._client = client
         return obj

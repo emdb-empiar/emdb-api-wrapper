@@ -54,9 +54,18 @@ class BasePlot(BaseModel, ABC):
 class PlotDataXY(BasePlot):
     x: List[float]
     y: List[float]
+    recommended_contour_level: Optional[Dict[str, float]] = None
+    resolution: Optional[float] = None
 
     def _draw(self):
         plt.plot(self.x, self.y)
+        if self.recommended_contour_level and "recl" in self.recommended_contour_level:
+            recl = self.recommended_contour_level["recl"]
+            plt.axvline(x=recl, color='red', linestyle='--', label=f'Recommended Contour Level {recl:.2f}')
+        if self.resolution is not None:
+            plt.axvline(x=1/self.resolution, color='red', linestyle='--', label=f'Resolution {self.resolution:.2f} Å')
+        plt.legend(loc="best")
+        plt.grid(True)
 
 
 class PlotDataHistogram(BasePlot):
@@ -83,17 +92,18 @@ class PlotFSC(BasePlot):
     type: str
     pdb_id: Optional[str] = None  # Optional field for PDB ID for mmfsc
     fsc: List[float]
-    onebit: Optional[List[float]]
-    halfbit: Optional[List[float]]
-    cutoff_0_5: Optional[List[float]]
-    cutoff_0_143: Optional[List[float]]
+    onebit: Optional[List[float]] = None
+    halfbit: Optional[List[float]] = None
+    cutoff_0_5: Optional[List[float]] = None
+    cutoff_0_143: Optional[List[float]] = None
     level: List[float]
-    angstrom_resolution: Optional[List[float]]
-    phaserandomization: Optional[List[float]]
-    fsc_masked: Optional[List[float]]
-    fsc_corrected: Optional[List[float]]
+    angstrom_resolution: Optional[List[float]] = None
+    phaserandomization: Optional[List[float]] = None
+    fsc_masked: Optional[List[float]] = None
+    fsc_corrected: Optional[List[float]] = None
     intersections: Dict
-    feature_zones: Optional[Dict]
+    feature_zones: Optional[Dict] = None
+    resolution: Optional[float] = None
 
     def _draw(self):
         # Plot the main FSC curve
@@ -113,6 +123,26 @@ class PlotFSC(BasePlot):
             plt.plot(self.level, self.fsc_masked, label="FSC Masked", linestyle="--", color="brown")
         if self.fsc_corrected:
             plt.plot(self.level, self.fsc_corrected, label="FSC Corrected", linestyle="--", color="darkgreen")
+        if self.resolution is not None:
+            plt.axvline(x=1/self.resolution, color='red', linestyle='--', label=f'Resolution {self.resolution:.2f} Å')
+
+        plt.legend(loc="best")
+        plt.grid(True)
+
+
+class PlotVolumeEstimate(BasePlot):
+    volume: List[float]
+    level: List[float]
+    estimated_volume: float
+    recommended_contour_level: Optional[Dict[str, float]] = None
+
+    def _draw(self):
+        plt.plot(self.level, self.volume, label="Volume", color="blue")
+        if self.estimated_volume is not None:
+            plt.axhline(y=self.estimated_volume, color='orange', linestyle='--', label=f'Estimated Volume {self.estimated_volume:.2f} nm³')
+        if self.recommended_contour_level and "recl" in self.recommended_contour_level:
+            recl = self.recommended_contour_level["recl"]
+            plt.axvline(x=recl, color='red', linestyle='--', label=f'Recommended Contour Level {recl:.2f}')
 
         plt.legend(loc="best")
         plt.grid(True)
