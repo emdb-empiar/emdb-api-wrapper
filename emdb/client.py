@@ -5,6 +5,7 @@ import pandas
 from io import StringIO
 
 from emdb.exceptions import EMDBInvalidIDError, EMDBNotFoundError, EMDBAPIError
+from emdb.models.annotations import EMDBAnnotations
 from emdb.models.entry import EMDBEntry
 from emdb.models.search import EMDBSearchResults
 from emdb.models.validation import EMDBValidation
@@ -64,6 +65,25 @@ class EMDBClient:
             raise e
         except Exception as e:
             raise EMDBAPIError(f"Failed to retrieve validation for {emdb_id}: {str(e)}")
+
+    @fixed_sleep_rate_limit(0.5)
+    def get_annotations(self, emdb_id: str) -> EMDBAnnotations:
+        """
+        Retrieve annotations for a given EMDB entry.
+
+        :param emdb_id: The EMDB ID of the entry to retrieve annotations for.
+        :return: A dictionary containing the annotations data.
+        :raises EMDBNotFoundError: If the entry is not found.
+        :raises EMDBAPIError: For API-related errors.
+        """
+        endpoint = f"/annotations/{emdb_id}"
+        try:
+            data = make_request(endpoint)
+            return EMDBAnnotations.from_api(data, self)
+        except EMDBNotFoundError as e:
+            raise e
+        except Exception as e:
+            raise EMDBAPIError(f"Failed to retrieve annotations for {emdb_id}: {str(e)}")
 
     def search(self, query: str) -> "EMDBSearchResults":
         """

@@ -4,6 +4,8 @@ from pydantic import BaseModel, PrivateAttr
 
 if TYPE_CHECKING:
     from emdb.client import EMDBClient
+    from emdb.models.validation import EMDBValidation
+    from emdb.models.annotations import EMDBAnnotations
 
 
 class EMDBEntry(BaseModel):
@@ -78,6 +80,17 @@ class EMDBEntry(BaseModel):
         if self._client:
             print(self.id)
             return self._client.get_validation(self.id)
+        return None
+
+    def get_annotations(self) -> Optional["EMDBAnnotations"]:
+        """
+        Retrieve annotations for this EMDB entry.
+
+        :return: An instance of EMDBAnnotations if available, otherwise None.
+        """
+        print("Retrieving annotations for EMDB entry:", self.id)
+        if self._client:
+            return self._client.get_annotations(self.id)
         return None
 
     def __str__(self):
