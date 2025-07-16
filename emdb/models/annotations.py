@@ -6,44 +6,344 @@ if TYPE_CHECKING:
     from emdb.client import EMDBClient
 
 
-class EMDBAnnotation(BaseModel):
+class EMDBBaseAnnotation(BaseModel):
+    """
+    Base model for EMDB annotations.
+    This model is used to represent a generic annotation in EMDB.
+    """
     id: str
-    database: str
     sample_id: str
     provenance: str
-    title: Optional[str] = None
-    start: Optional[int] = None
-    end: Optional[int] = None
-    type: Optional[str] = None
-    score: Optional[float] = None
 
     @classmethod
-    def from_api(cls, data: dict, database: str, sample_id: str) -> "EMDBAnnotation":
-        """
-        Create an EMDBAnnotation instance from API data.
-
-        :param database: The source of annotation (e.g., "orcid", "empiar", "pdb").
-        :param sample_id: The sample ID associated with the annotation.
-        :param data: The data returned by the EMDB API.
-        :return: An instance of EMDBAnnotation.
-        """
-        annotation = cls(
+    def from_api(cls, data: dict, sample_id: str) -> "EMDBBaseAnnotation":
+        return cls(
             id=data.get("id"),
-            database=database,
             sample_id=sample_id,
             provenance=data.get("method"),
         )
-        if "title" in data:
-            annotation.title = data["title"]
-        if "start" in data:
-            annotation.start = data["start"]
-        if "end" in data:
-            annotation.end = data["end"]
-        if "type" in data:
-            annotation.type = data["type"]
-        if "score" in data:
-            annotation.score = data["score"]
-        return annotation
+
+
+class ComplexPortalAnnotation(EMDBBaseAnnotation):
+    title: Optional[str] = None
+    score: float
+
+    @classmethod
+    def from_api(cls, data: dict, sample_id: str) -> "ComplexPortalAnnotation":
+        """
+        Create a ComplexPortalAnnotation instance from API data.
+
+        :param sample_id: The sample ID associated with the annotation.
+        :param data: The data returned by the EMDB API.
+        :return: An instance of ComplexPortalAnnotation.
+        """
+        return cls(
+            id=data.get("id"),
+            sample_id=sample_id,
+            provenance=data.get("method"),
+            title=data.get("title", None),
+            score=data.get("score")
+        )
+
+    def __str__(self):
+        return (f"<ComplexPortalAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance} "
+                f"title={self.title} "
+                f"score={self.score}>")
+
+
+class UniProtAnnotation(EMDBBaseAnnotation):
+
+    def __str__(self):
+        return (f"<UniProtAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance}>")
+
+
+class PfamAnnotation(EMDBBaseAnnotation):
+    title: Optional[str] = None
+    start: int
+    end: int
+
+    @classmethod
+    def from_api(cls, data: dict, sample_id: str) -> "PfamAnnotation":
+        """
+        Create a PfamAnnotation instance from API data.
+
+        :param sample_id: The sample ID associated with the annotation.
+        :param data: The data returned by the EMDB API.
+        :return: An instance of PfamAnnotation.
+        """
+        return cls(
+            id=data.get("id"),
+            sample_id=sample_id,
+            provenance=data.get("method"),
+            title=data.get("title", None),
+            start=data.get("start"),
+            end=data.get("end")
+        )
+
+    def __str__(self):
+        return (f"<PfamAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance} "
+                f"title={self.title} "
+                f"start={self.start} "
+                f"end={self.end}>")
+
+
+class InterProAnnotation(EMDBBaseAnnotation):
+    title: Optional[str] = None
+    start: int
+    end: int
+
+    @classmethod
+    def from_api(cls, data: dict, sample_id: str) -> "InterProAnnotation":
+        """
+        Create an InterProAnnotation instance from API data.
+
+        :param sample_id: The sample ID associated with the annotation.
+        :param data: The data returned by the EMDB API.
+        :return: An instance of InterProAnnotation.
+        """
+        return cls(
+            id=data.get("id"),
+            sample_id=sample_id,
+            provenance=data.get("method"),
+            title=data.get("title", None),
+            start=data.get("start"),
+            end=data.get("end")
+        )
+
+    def __str__(self):
+        return (f"<InterProAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance} "
+                f"title={self.title} "
+                f"start={self.start} "
+                f"end={self.end}>")
+
+
+class GeneOntologyAnnotation(EMDBBaseAnnotation):
+    title: Optional[str] = None
+    type: str
+
+    @classmethod
+    def from_api(cls, data: dict, sample_id: str) -> "GeneOntologyAnnotation":
+        """
+        Create a GeneOntologyAnnotation instance from API data.
+
+        :param sample_id: The sample ID associated with the annotation.
+        :param data: The data returned by the EMDB API.
+        :return: An instance of GeneOntologyAnnotation.
+        """
+        type_char = data.get("type", "")
+        type_text = ""
+        if type_char == "C":
+            type_text = "CELLULAR COMPONENT"
+        elif type_char == "P":
+            type_text = "BIOLOGICAL PROCESS"
+        elif type_char == "F":
+            type_text = "MOLECULAR FUNCTION"
+
+        return cls(
+            id=data.get("id"),
+            sample_id=sample_id,
+            provenance=data.get("method"),
+            title=data.get("title", None),
+            type=type_text
+        )
+
+    def __str__(self):
+        return (f"<GeneOntologyAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance} "
+                f"title={self.title} "
+                f"type={self.type}>")
+
+
+class CathAnnotation(EMDBBaseAnnotation):
+    start: int
+    end: int
+
+    @classmethod
+    def from_api(cls, data: dict, sample_id: str) -> "CathAnnotation":
+        """
+        Create a CathAnnotation instance from API data.
+
+        :param sample_id: The sample ID associated with the annotation.
+        :param data: The data returned by the EMDB API.
+        :return: An instance of CathAnnotation.
+        """
+        return cls(
+            id=data.get("id"),
+            sample_id=sample_id,
+            provenance=data.get("method"),
+            start=data.get("start"),
+            end=data.get("end")
+        )
+
+    def __str__(self):
+        return (f"<CathAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance} "
+                f"start={self.start} "
+                f"end={self.end}>")
+
+
+class ChEBIAnnotation(EMDBBaseAnnotation):
+    title: Optional[str] = None
+
+    @classmethod
+    def from_api(cls, data: dict, sample_id: str) -> "ChEBIAnnotation":
+        """
+        Create a ChEBIAnnotation instance from API data.
+
+        :param sample_id: The sample ID associated with the annotation.
+        :param data: The data returned by the EMDB API.
+        :return: An instance of ChEBIAnnotation.
+        """
+        return cls(
+            id=data.get("id"),
+            sample_id=sample_id,
+            provenance=data.get("method"),
+            title=data.get("title", None)
+        )
+
+    def __str__(self):
+        return (f"<ChEBIAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance} "
+                f"title={self.title}>")
+
+
+class ChEMBLAnnotation(EMDBBaseAnnotation):
+    title: Optional[str] = None
+
+    @classmethod
+    def from_api(cls, data: dict, sample_id: str) -> "ChEMBLAnnotation":
+        """
+        Create a ChEMBLAnnotation instance from API data.
+
+        :param sample_id: The sample ID associated with the annotation.
+        :param data: The data returned by the EMDB API.
+        :return: An instance of ChEMBLAnnotation.
+        """
+        return cls(
+            id=data.get("id"),
+            sample_id=sample_id,
+            provenance=data.get("method"),
+            title=data.get("title", None)
+        )
+
+    def __str__(self):
+        return (f"<ChEMBLAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance} "
+                f"title={self.title}>")
+
+
+class DrugBankAnnotation(EMDBBaseAnnotation):
+    title: Optional[str] = None
+
+    @classmethod
+    def from_api(cls, data: dict, sample_id: str) -> "DrugBankAnnotation":
+        """
+        Create a DrugBankAnnotation instance from API data.
+
+        :param sample_id: The sample ID associated with the annotation.
+        :param data: The data returned by the EMDB API.
+        :return: An instance of DrugBankAnnotation.
+        """
+        return cls(
+            id=data.get("id"),
+            sample_id=sample_id,
+            provenance=data.get("method"),
+            title=data.get("title", None)
+        )
+
+    def __str__(self):
+        return (f"<DrugBankAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance} "
+                f"title={self.title}>")
+
+
+class PDBeKbAnnotation(EMDBBaseAnnotation):
+    def __str__(self):
+        return (f"<PDBeKbAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance}>")
+
+
+class AlphaFoldDBAnnotation(EMDBBaseAnnotation):
+    def __str__(self):
+        return (f"<AlphaFoldDBAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance}>")
+
+
+class Scop2Annotation(EMDBBaseAnnotation):
+    def __str__(self):
+        return (f"<Scop2Annotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance}>")
+
+
+class ORCIDAnnotation(EMDBBaseAnnotation):
+    title: Optional[str] = None
+
+    @classmethod
+    def from_api(cls, data: dict, sample_id: str) -> "ORCIDAnnotation":
+        """
+        Create an ORCIDAnnotation instance from API data.
+
+        :param sample_id: The sample ID associated with the annotation.
+        :param data: The data returned by the EMDB API.
+        :return: An instance of ORCIDAnnotation.
+        """
+        return cls(
+            id=data.get("id"),
+            sample_id=sample_id,
+            provenance=data.get("method"),
+            title=data.get("title", None)
+        )
+
+    def __str__(self):
+        return (f"<ORCIDAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance} "
+                f"title={self.title}>")
+
+
+class EMPIARAnnotation(EMDBBaseAnnotation):
+    def __str__(self):
+        return (f"<EMPIARAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance}>")
+
+
+class PDBAnnotation(EMDBBaseAnnotation):
+    def __str__(self):
+        return (f"<PDBAnnotation "
+                f"id={self.id} "
+                f"sample_id={self.sample_id} "
+                f"provenance={self.provenance}>")
 
 
 class EMDBSupramoleculeSample(BaseModel):
@@ -53,7 +353,7 @@ class EMDBSupramoleculeSample(BaseModel):
     """
     id: int
     type: str
-    complex_portal: Optional[List[EMDBAnnotation]] = None
+    complex_portal: Optional[List[ComplexPortalAnnotation]] = None
 
     @classmethod
     def from_api(cls, data: dict, mol_id: str) -> "EMDBSupramoleculeSample":
@@ -70,7 +370,7 @@ class EMDBSupramoleculeSample(BaseModel):
             annotations = data["annotations"]
             complex_portal_data = annotations.get("CPX", [])
             for annotation in complex_portal_data:
-                cpx.append(EMDBAnnotation.from_api(annotation, database="Complex Portal", sample_id=mol_id))
+                cpx.append(ComplexPortalAnnotation.from_api(annotation, sample_id=mol_id))
 
         supramolecule =  cls(
             id=int(mol_id[1:]),
@@ -96,17 +396,20 @@ class EMDBMacromoleculeSample(BaseModel):
     """
     id: int
     type: str
-    uniprot: Optional[List[EMDBAnnotation]] = None
-    pfam: Optional[List[EMDBAnnotation]] = None
-    interpro: Optional[List[EMDBAnnotation]] = None
-    gene_ontology: Optional[List[EMDBAnnotation]] = None
-    cath: Optional[List[EMDBAnnotation]] = None
-    chebi: Optional[List[EMDBAnnotation]] = None
-    chembl: Optional[List[EMDBAnnotation]] = None
-    drugbank: Optional[List[EMDBAnnotation]] = None
-    pdbekb: Optional[List[EMDBAnnotation]] = None
-    alphafolddb: Optional[List[EMDBAnnotation]] = None
-    scop2: Optional[List[EMDBAnnotation]] = None
+    uniprot: List[UniProtAnnotation] = []
+    pfam: List[PfamAnnotation] = []
+    interpro: List[InterProAnnotation] = []
+    gene_ontology: List[GeneOntologyAnnotation] = []
+    gene_ontology_cell: List[GeneOntologyAnnotation] = []
+    gene_ontology_process: List[GeneOntologyAnnotation] = []
+    gene_ontology_function: List[GeneOntologyAnnotation] = []
+    cath: List[CathAnnotation] = []
+    chebi: List[ChEBIAnnotation] = []
+    chembl: List[ChEMBLAnnotation] = []
+    drugbank: List[DrugBankAnnotation] = []
+    pdbekb: List[PDBeKbAnnotation] = []
+    alphafolddb: List[AlphaFoldDBAnnotation] = []
+    scop2: List[Scop2Annotation] = []
 
     @classmethod
     def from_api(cls, data: dict, mol_id: str) -> "EMDBMacromoleculeSample":
@@ -120,6 +423,7 @@ class EMDBMacromoleculeSample(BaseModel):
         uniprot = []
         pfam = []
         interpro = []
+        gene_ontology = []
         gene_ontology_cell = []
         gene_ontology_process = []
         gene_ontology_function = []
@@ -135,75 +439,66 @@ class EMDBMacromoleculeSample(BaseModel):
             annotations = data["annotations"]
             uniprot_data = annotations.get("UNIPROT", [])
             for annotation in uniprot_data:
-                uniprot.append(EMDBAnnotation.from_api(annotation, database="UniProt", sample_id=mol_id))
+                uniprot.append(UniProtAnnotation.from_api(annotation, sample_id=mol_id))
             pfam_data = annotations.get("PFAM", [])
             for annotation in pfam_data:
-                pfam.append(EMDBAnnotation.from_api(annotation, database="PFAM", sample_id=mol_id))
+                pfam.append(PfamAnnotation.from_api(annotation, sample_id=mol_id))
             interpro_data = annotations.get("INTERPRO", [])
             for annotation in interpro_data:
-                interpro.append(EMDBAnnotation.from_api(annotation, database="InterPro", sample_id=mol_id))
+                interpro.append(InterProAnnotation.from_api(annotation, sample_id=mol_id))
             gene_ontology_data = annotations.get("GO", {})
             gene_ontology_cell_data = gene_ontology_data.get("C", [])
             gene_ontology_process_data = gene_ontology_data.get("P", [])
             gene_ontology_function_data = gene_ontology_data.get("F", [])
             for annotation in gene_ontology_cell_data:
-                gene_ontology_cell.append(EMDBAnnotation.from_api(annotation, database="GO", sample_id=mol_id))
+                gene_ontology_cell.append(GeneOntologyAnnotation.from_api(annotation, sample_id=mol_id))
+                gene_ontology.append(GeneOntologyAnnotation.from_api(annotation, sample_id=mol_id))
             for annotation in gene_ontology_process_data:
-                gene_ontology_process.append(EMDBAnnotation.from_api(annotation, database="GO", sample_id=mol_id))
+                gene_ontology_process.append(GeneOntologyAnnotation.from_api(annotation, sample_id=mol_id))
+                gene_ontology.append(GeneOntologyAnnotation.from_api(annotation, sample_id=mol_id))
             for annotation in gene_ontology_function_data:
-                gene_ontology_function.append(EMDBAnnotation.from_api(annotation, database="GO", sample_id=mol_id))
+                gene_ontology_function.append(GeneOntologyAnnotation.from_api(annotation, sample_id=mol_id))
+                gene_ontology.append(GeneOntologyAnnotation.from_api(annotation, sample_id=mol_id))
             cath_data = annotations.get("CATH", [])
             for annotation in cath_data:
-                cath.append(EMDBAnnotation.from_api(annotation, database="CATH", sample_id=mol_id))
+                cath.append(CathAnnotation.from_api(annotation, sample_id=mol_id))
             chebi_data = annotations.get("CHEBI", [])
             for annotation in chebi_data:
-                chebi.append(EMDBAnnotation.from_api(annotation, database="ChEBI", sample_id=mol_id))
+                chebi.append(ChEBIAnnotation.from_api(annotation, sample_id=mol_id))
             chembl_data = annotations.get("CHEMBL", [])
             for annotation in chembl_data:
-                chembl.append(EMDBAnnotation.from_api(annotation, database="ChEMBL", sample_id=mol_id))
+                chembl.append(ChEMBLAnnotation.from_api(annotation, sample_id=mol_id))
             drugbank_data = annotations.get("DRUGBANK", [])
             for annotation in drugbank_data:
-                drugbank.append(EMDBAnnotation.from_api(annotation, database="DrugBank", sample_id=mol_id))
+                drugbank.append(DrugBankAnnotation.from_api(annotation, sample_id=mol_id))
             pdbekb_data = annotations.get("PDBEKB", [])
             for annotation in pdbekb_data:
-                pdbekb.append(EMDBAnnotation.from_api(annotation, database="PDBEKBD", sample_id=mol_id))
+                pdbekb.append(PDBeKbAnnotation.from_api(annotation, sample_id=mol_id))
             alphafolddb_data = annotations.get("ALPHAFOLDDB", [])
             for annotation in alphafolddb_data:
-                alphafolddb.append(EMDBAnnotation.from_api(annotation, database="AlphaFoldDB", sample_id=mol_id))
+                alphafolddb.append(AlphaFoldDBAnnotation.from_api(annotation, sample_id=mol_id))
             scop2_data = annotations.get("SCOP2", [])
             for annotation in scop2_data:
-                scop2.append(EMDBAnnotation.from_api(annotation, database="SCOP2", sample_id=mol_id))
+                scop2.append(Scop2Annotation.from_api(annotation, sample_id=mol_id))
 
         macromolecule = cls(
             id=int(mol_id[1:]),
-            type=data.get("type", "")
+            type=data.get("type", ""),
+            uniprot=uniprot,
+            pfam=pfam,
+            interpro=interpro,
+            gene_ontology=gene_ontology,
+            gene_ontology_cell=gene_ontology_cell,
+            gene_ontology_process=gene_ontology_process,
+            gene_ontology_function=gene_ontology_function,
+            cath=cath,
+            chebi=chebi,
+            chembl=chembl,
+            drugbank=drugbank,
+            pdbekb=pdbekb,
+            alphafolddb=alphafolddb,
+            scop2=scop2
         )
-        if uniprot:
-            macromolecule.uniprot = uniprot
-        if pfam:
-            macromolecule.pfam = pfam
-        if interpro:
-            macromolecule.interpro = interpro
-        if gene_ontology_cell:
-            macromolecule.gene_ontology = gene_ontology_cell
-        if gene_ontology_process:
-            macromolecule.gene_ontology.extend(gene_ontology_process)
-        if gene_ontology_function:
-            macromolecule.gene_ontology.extend(gene_ontology_function)
-        if cath:
-            macromolecule.cath = cath
-        if chebi:
-            macromolecule.chebi = chebi
-        if chembl:
-            macromolecule.chembl = chembl
-        if drugbank:
-            macromolecule.drugbank = drugbank
-        if pdbekb:
-            macromolecule.pdbekb = pdbekb
-        if alphafolddb:
-            macromolecule.alphafolddb = alphafolddb
-        if scop2:
-            macromolecule.scop2 = scop2
 
         return macromolecule
 
@@ -232,9 +527,9 @@ class EMDBAnnotations(BaseModel):
     emdb_id: str
     macromolecules: List[EMDBMacromoleculeSample] = []
     supramolecules: List[EMDBSupramoleculeSample] = []
-    orcid: Optional[List[EMDBAnnotation]] = None
-    empiar: Optional[List[EMDBAnnotation]] = None
-    pdb: Optional[List[EMDBAnnotation]] = None
+    orcid: Optional[List[ORCIDAnnotation]] = None
+    empiar: Optional[List[EMPIARAnnotation]] = None
+    pdb: Optional[List[PDBAnnotation]] = None
     _client: Optional["EMDBClient"] = PrivateAttr(default=None)
 
     @classmethod
@@ -254,13 +549,13 @@ class EMDBAnnotations(BaseModel):
 
             orcids = annotations.get("ORCID", [])
             for annotation in orcids:
-                orcid.append(EMDBAnnotation.from_api(annotation, database="ORCID", sample_id="all"))
+                orcid.append(ORCIDAnnotation.from_api(annotation, sample_id="all"))
             empiars = annotations.get("EMPIAR", [])
             for annotation in empiars:
-                empiar.append(EMDBAnnotation.from_api(annotation, database="EMPIAR", sample_id="all"))
+                empiar.append(EMPIARAnnotation.from_api(annotation, sample_id="all"))
             pdbs = annotations.get("PDB", [])
             for annotation in pdbs:
-                pdb.append(EMDBAnnotation.from_api(annotation, database="PDB", sample_id="all"))
+                pdb.append(PDBAnnotation.from_api(annotation, sample_id="all"))
 
         obj = cls(
             emdb_id=data.get("emdb_id"),
