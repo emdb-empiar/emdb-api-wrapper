@@ -1,6 +1,6 @@
-from emdb.client import EMDBClient
+from emdb.client import EMDB
 
-client = EMDBClient()
+client = EMDB()
 
 entry = client.get_entry("EMD-8117")
 # entry = client.get_entry("EMD-45474")

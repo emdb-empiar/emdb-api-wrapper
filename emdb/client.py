@@ -12,12 +12,12 @@ from emdb.models.validation import EMDBValidation
 from emdb.utils import make_request, fixed_sleep_rate_limit
 
 
-class EMDBClient:
+class EMDB:
     """
     High-level EMDB API client.
 
     Usage:
-        client = EMDBClient()
+        client = EMDB()
         entry = client.get_entry("EMD-1234")
     """
 

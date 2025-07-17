@@ -3,7 +3,7 @@ from typing import Optional, TYPE_CHECKING, List
 from pydantic import BaseModel, PrivateAttr
 
 if TYPE_CHECKING:
-    from emdb.client import EMDBClient
+    from emdb.client import EMDB
 
 
 class EMDBBaseAnnotation(BaseModel):
@@ -530,15 +530,15 @@ class EMDBAnnotations(BaseModel):
     orcid: Optional[List[ORCIDAnnotation]] = None
     empiar: Optional[List[EMPIARAnnotation]] = None
     pdb: Optional[List[PDBAnnotation]] = None
-    _client: Optional["EMDBClient"] = PrivateAttr(default=None)
+    _client: Optional["EMDB"] = PrivateAttr(default=None)
 
     @classmethod
-    def from_api(cls, data: dict, client: "EMDBClient") -> "EMDBAnnotations":
+    def from_api(cls, data: dict, client: "EMDB") -> "EMDBAnnotations":
         """
         Create an EMDBAnnotations instance from API data.
 
         :param data: The data returned by the EMDB API.
-        :param client: The EMDBClient instance used to make the API request.
+        :param client: The EMDB client instance used to make the API request.
         :return: An instance of EMDBAnnotations.
         """
         orcid = []

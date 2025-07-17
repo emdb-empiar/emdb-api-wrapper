@@ -5,7 +5,7 @@ import re
 from emdb.models.plots import PlotDataXY, PlotDataHistogram, PlotFSC, PlotVolumeEstimate
 
 if TYPE_CHECKING:
-    from emdb.client import EMDBClient
+    from emdb.client import EMDB
 
 
 class EMDBValidationGeneral(BaseModel):
@@ -318,16 +318,16 @@ class EMDBValidation(BaseModel):
     general: EMDBValidationGeneral
     scores: EMDBValidationScores
     plots: EMDBValidationPlots
-    _client: Optional["EMDBClient"] = PrivateAttr(default=None)
+    _client: Optional["EMDB"] = PrivateAttr(default=None)
 
     @classmethod
-    def from_api(cls, emdb_id: str, data: dict, client: "EMDBClient") -> "EMDBValidation":
+    def from_api(cls, emdb_id: str, data: dict, client: "EMDB") -> "EMDBValidation":
         """
         Create an EMDBValidation instance from API data.
 
         :param emdb_id: The EMDB ID of the entry to retrieve validation data for.
         :param data: Dictionary containing EMDB validation data.
-        :param client: An instance of EMDBClient to interact with the API.
+        :param client: An instance of EMDB client to interact with the API.
         :return: An instance of EMDBValidation.
         """
         data = data[emdb_id[4:]]

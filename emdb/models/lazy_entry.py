@@ -2,11 +2,11 @@ from typing import Optional, TYPE_CHECKING
 from emdb.models.entry import EMDBEntry
 
 if TYPE_CHECKING:
-    from emdb.client import EMDBClient
+    from emdb.client import EMDB
 
 
 class LazyEMDBEntry:
-    def __init__(self, emdb_id: str, client: "EMDBClient"):
+    def __init__(self, emdb_id: str, client: "EMDB"):
         self._id = emdb_id
         self._client = client
         self._entry: Optional[EMDBEntry] = None

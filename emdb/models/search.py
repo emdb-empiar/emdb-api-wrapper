@@ -5,18 +5,18 @@ from pydantic import BaseModel, PrivateAttr
 from emdb.models.lazy_entry import LazyEMDBEntry
 
 if TYPE_CHECKING:
-    from emdb.client import EMDBClient
+    from emdb.client import EMDB
 
 
 class EMDBSearchResults(BaseModel):
     entries: List[LazyEMDBEntry]
-    _client: Optional["EMDBClient"] = PrivateAttr(default=None)
+    _client: Optional["EMDB"] = PrivateAttr(default=None)
 
     class Config:
         arbitrary_types_allowed = True
 
     @classmethod
-    def from_api(cls, data: str, client: "EMDBClient") -> "EMDBSearchResults":
+    def from_api(cls, data: str, client: "EMDB") -> "EMDBSearchResults":
         lines = data.strip().split("\n")
         if len(lines) < 2:
             return cls(_entries=[], _client=client)

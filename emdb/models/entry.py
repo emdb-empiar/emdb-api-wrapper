@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional, Dict, List
 from pydantic import BaseModel, PrivateAttr
 
 if TYPE_CHECKING:
-    from emdb.client import EMDBClient
+    from emdb.client import EMDB
     from emdb.models.validation import EMDBValidation
     from emdb.models.annotations import EMDBAnnotations
 
@@ -21,15 +21,15 @@ class EMDBEntry(BaseModel):
     primary_map: Dict
     additional_files: Dict
 
-    _client: Optional["EMDBClient"] = PrivateAttr(default=None)
+    _client: Optional["EMDB"] = PrivateAttr(default=None)
 
     @classmethod
-    def from_api(cls, data: dict, client: "EMDBClient") -> "EMDBEntry":
+    def from_api(cls, data: dict, client: "EMDB") -> "EMDBEntry":
         """
         Create an EMDBEntry instance from API data.
 
         :param data: Dictionary containing EMDB entry data.
-        :param client: An instance of EMDBClient to interact with the API.
+        :param client: An instance of EMDB client to interact with the API.
         :return: An instance of EMDBEntry.
         """
         try:
