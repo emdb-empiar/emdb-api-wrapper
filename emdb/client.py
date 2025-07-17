@@ -1,4 +1,5 @@
 import traceback
+import urllib.request
 
 import pandas
 
@@ -20,8 +21,9 @@ class EMDB:
         client = EMDB()
         entry = client.get_entry("EMD-1234")
     """
+    FTP_BASE_URL: str = "https://ftp.ebi.ac.uk/pub/databases/emdb"
 
-    @fixed_sleep_rate_limit(0.2)
+    @fixed_sleep_rate_limit(0.4)
     def get_entry(self, emdb_id: str) -> EMDBEntry:
         """
         Retrieve an EMDB entry by its ID.
@@ -46,7 +48,7 @@ class EMDB:
             print(traceback_str)
             raise EMDBAPIError(f"Failed to retrieve entry {emdb_id}: {str(e)}")
 
-    @fixed_sleep_rate_limit(0.2)
+    @fixed_sleep_rate_limit(0.4)
     def get_validation(self, emdb_id: str) -> "EMDBValidation":
         """
         Retrieve the validation data for a given EMDB entry.
@@ -130,4 +132,5 @@ class EMDB:
             return pandas.read_csv(StringIO(data))
         except Exception as e:
             raise EMDBAPIError(f"Raw search failed: {str(e)}")
+
 

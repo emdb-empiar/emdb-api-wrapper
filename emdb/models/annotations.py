@@ -23,6 +23,9 @@ class EMDBBaseAnnotation(BaseModel):
             provenance=data.get("method"),
         )
 
+    def __repr__(self):
+        return self.__str__()
+
 
 class ComplexPortalAnnotation(EMDBBaseAnnotation):
     title: Optional[str] = None

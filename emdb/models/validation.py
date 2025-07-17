@@ -41,6 +41,9 @@ class EMDBValidationGeneral(BaseModel):
                 f"surface_ratio={self.surface_ratio}, "
                 f"rawmap_contour_level={self.rawmap_contour_level}>")
 
+    def __repr__(self):
+        return self.__str__()
+
 
 class EMDBModelScore(BaseModel):
     """
@@ -160,6 +163,9 @@ class EMDBModelScore(BaseModel):
         return (f"<EMDBModelScore metric={self.metric}, pdb_id={self.pdb_id}, "
                 f"average_color={self.average_color}, average_score={self.average_score}>")
 
+    def __repr__(self):
+        return self.__str__()
+
 
 class EMDBValidationScores(BaseModel):
     """
@@ -194,6 +200,9 @@ class EMDBValidationScores(BaseModel):
     def __str__(self):
         return (f"<EMDBValidationScores ccc={self.ccc}, atom_inclusion={self.atom_inclusion}, "
                 f"smoc={self.smoc}, qscore={self.qscore}>")
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class EMDBValidationPlots(BaseModel):
@@ -307,6 +316,9 @@ class EMDBValidationPlots(BaseModel):
                 f"fsc={self.fsc is not None}>"
         )
 
+    def __repr__(self):
+        return self.__str__()
+
 
 class EMDBValidation(BaseModel):
     """
@@ -353,3 +365,6 @@ class EMDBValidation(BaseModel):
 
     def __str__(self):
         return f"<EMDBValidation id={self.id}, resolution={self.resolution}, recommended_contour_level={self.recommended_contour_level}>"
+
+    def __repr__(self):
+        return self.__str__()
