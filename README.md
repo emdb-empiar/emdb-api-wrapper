@@ -35,7 +35,8 @@ try:
     
     # Access cross-reference annotations
     annotations = entry.get_annotations()
-    print(annotations)
+    for annotation in annotations:
+        print(annotation)
     
     # Access validation data and plot FSC
     validation = entry.get_validation()
@@ -43,6 +44,15 @@ try:
     
     # Download all files
     entry.download_all_files(output_dir="/tmp/emd1234/")
+    
+    # Perform a query to return EMDB entries
+    results = client.search("HIV")
+    for entry in results:
+        print(entry.id, entry.method, entry.resolution)
+    
+    # Perform a query to return a DataFrame
+    table = client.csv_search("HIV")
+    print(table)
 except EMDBNotFoundError:
     print("Entry not found.")
 ```
