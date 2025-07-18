@@ -150,7 +150,6 @@ class EMDBEntry(BaseModel):
         print("Retrieving validation data for EMDB entry:", self.id)
         print("Client:", self._client)
         if self._client:
-            print(self.id)
             return self._client.get_validation(self.id)
         return None
 

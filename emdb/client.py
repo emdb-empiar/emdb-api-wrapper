@@ -41,8 +41,6 @@ class EMDB:
         except EMDBNotFoundError as e:
             raise e
         except Exception as e:
-            traceback_str = traceback.format_exc()
-            print(traceback_str)
             raise EMDBAPIError(f"Failed to retrieve entry {emdb_id}: {str(e)}")
 
     @fixed_sleep_rate_limit(0.4)

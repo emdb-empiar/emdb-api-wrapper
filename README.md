@@ -15,7 +15,11 @@ Full API documentation is available at:
 👉 [https://emdb.readthedocs.io/en/latest/](https://emdb.readthedocs.io/en/latest/)
 
 ## 🔧 Installation
-COMING SOON
+You can install the EMDB client via pip:
+
+```bash
+pip install emdb
+```
 
 ## ✨ Quick Start
 ```python
