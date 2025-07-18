@@ -12,9 +12,8 @@ entry = client.get_entry("EMD-8117")
 # file = entry.pdb_models[0]
 # file.download("/Users/neli/Downloads/")
 
-print(entry.deposited_files)
-entry.download_all_files("/Users/neli/Downloads/test_wrapper/")
-
+# print(entry.deposited_files)
+# entry.download_all_files("/Users/neli/Downloads/test_wrapper/")
 
 # annotations = entry.get_annotations()
 #

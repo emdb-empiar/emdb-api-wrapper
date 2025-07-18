@@ -1,6 +1,4 @@
 import traceback
-import urllib.request
-
 import pandas
 
 from io import StringIO
@@ -21,7 +19,6 @@ class EMDB:
         client = EMDB()
         entry = client.get_entry("EMD-1234")
     """
-    FTP_BASE_URL: str = "https://ftp.ebi.ac.uk/pub/databases/emdb"
 
     @fixed_sleep_rate_limit(0.4)
     def get_entry(self, emdb_id: str) -> EMDBEntry:

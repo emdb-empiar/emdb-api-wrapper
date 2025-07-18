@@ -37,6 +37,7 @@ class EMDBRateLimitError(EMDBAPIError):
     """Raised when the API rate limit is exceeded."""
     pass
 
+
 class EMDBFileNotFoundError(EMDBError):
     """Raised when a requested file in an EMDB entry is not found."""
     def __init__(self, emdb_id: str, filename: str):

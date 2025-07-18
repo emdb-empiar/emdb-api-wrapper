@@ -1,3 +1,4 @@
+import functools
 import time
 
 import requests
@@ -10,6 +11,7 @@ def fixed_sleep_rate_limit(min_interval_seconds: float):
     last_call = [0]
 
     def decorator(func):
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             elapsed = time.time() - last_call[0]
             if elapsed < min_interval_seconds:
