@@ -57,9 +57,6 @@ except EMDBNotFoundError:
     print("Entry not found.")
 ```
 
-## 🧪 Tests
-COMING SOON
-
 ## 🛠 Requirements
 - Python 3.8+
 See [requirements.txt](requirements.txt) for full dependencies.

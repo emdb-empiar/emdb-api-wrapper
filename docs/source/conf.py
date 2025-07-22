@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 project = 'EMDB API client'
 copyright = '2025, Neli Fonseca'
 author = 'Neli Fonseca'
-release = '0.1.7'
+release = '0.1.8'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -22,6 +22,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",  # optional, for Google/NumPy style (you can keep it)
     "sphinx.ext.viewcode",  # optional, adds links to source code
+    "sphinx.ext.autosummary",
 ]
 
 templates_path = ['_templates']
