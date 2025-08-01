@@ -3,6 +3,7 @@ from emdb.client import EMDB
 client = EMDB()
 
 entry = client.get_entry("EMD-8117")
+print(entry.admin["current_status"]["code"]["valueOf_"])
 # entry = client.get_entry("EMD-45474") # Example with annotations
 # entry = client.get_entry("EMD-45369")  # Example with additional maps
 # entry = client.get_entry("EMD-1016")  # Example with slices, model and figures

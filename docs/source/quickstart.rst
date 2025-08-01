@@ -8,7 +8,7 @@ Install the latest version from PyPI:
 
 .. code-block:: bash
 
-    pip install emdb-client
+    pip install emdb
 
 Basic Usage
 -----------
