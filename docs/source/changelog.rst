@@ -9,6 +9,12 @@ The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`
    :local:
    :depth: 1
 
+Version 0.1.9 (2025-08-13)
+--------------------------
+
+Added
+^^^^^
+- Added retry logic for network requests to handle transient errors.
 
 Version 0.1.8 (2025-07-22)
 --------------------------
