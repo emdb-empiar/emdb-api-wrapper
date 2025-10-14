@@ -65,6 +65,25 @@ See [requirements.txt](requirements.txt) for full dependencies.
 Contributions are welcome!
 Feel free to open issues or submit pull requests.
 
+For detailed contributing guidelines, see [CONTRIBUTING.md](docs/source/contributing.rst).
+
+### Running Tests
+This project uses pytest for testing. To run the tests:
+
+```bash
+# Install test dependencies
+pip install -e ".[test]"
+
+# Run all tests
+pytest
+
+# Run with coverage report
+pytest --cov=emdb --cov-report=html
+
+# Run specific test file
+pytest tests/test_client.py
+```
+
 ## 📄 License
 This project is licensed under the Apache License 2.0.
 
