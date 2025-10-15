@@ -27,7 +27,7 @@ To contribute, you will need to:
 
        python -m venv venv
        source venv/bin/activate  # On Windows: venv\Scripts\activate
-       pip install -e .
+       pip install -e ".[test]"
 
 4. Create a new branch for your feature or fix:
 
@@ -42,6 +42,41 @@ Development Guidelines
 - Include **type hints** and **docstrings** where applicable.
 - Keep pull requests focused: one change per PR.
 - Write or update **unit tests** for any new functionality.
+
+Testing
+-------
+
+This project uses pytest for unit testing. Before submitting a pull request, make sure all tests pass:
+
+.. code-block:: bash
+
+    # Run all tests
+    pytest
+
+    # Run tests with verbose output
+    pytest -v
+
+    # Run tests with coverage report
+    pytest --cov=emdb --cov-report=html
+
+    # Run specific test file
+    pytest tests/test_client.py
+
+    # Run specific test class or function
+    pytest tests/test_client.py::TestEMDBClient::test_get_entry_success
+
+Test files are located in the `tests/` directory. Each module has a corresponding test file:
+
+- `tests/test_client.py` - Tests for the EMDB client
+- `tests/test_exceptions.py` - Tests for exception classes
+- `tests/test_utils.py` - Tests for utility functions
+- `tests/test_search.py` - Tests for search and lazy entry loading
+
+When adding new features, please include comprehensive unit tests that cover:
+
+- Normal operation cases
+- Edge cases
+- Error conditions
 
 Documentation
 -------------
