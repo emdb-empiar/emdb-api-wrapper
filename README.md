@@ -58,7 +58,7 @@ except EMDBNotFoundError:
 ```
 
 ## 🛠 Requirements
-- Python 3.8+
+- Python 3.10+
 See [requirements.txt](requirements.txt) for full dependencies.
 
 ## 🤝 Contributing
@@ -89,4 +89,3 @@ This project is licensed under the Apache License 2.0.
 
 ## 📧 Contact
 For questions or feedback, please open an issue on GitHub or contact the maintainers.
-

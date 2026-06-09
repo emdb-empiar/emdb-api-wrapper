@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "emdb"
-version = "0.1.10"
+version = "0.1.11"
 description = "A Python client for accessing the Electron Microscopy Data Bank (EMDB)"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = {text = "Apache 2"}
 authors = [
     { name = "Neli Fonseca", email = "neli@ebi.ac.uk" }
