@@ -89,7 +89,7 @@ class EMDBEntry(BaseModel):
 
         primary_map = PrimaryMapFile.from_api(data.get("map", {}))
         primary_map._emdb_id = emdb_id
-        figure = FigureFile(filename=f"400_{numeric_id}.gif")
+        figure = FigureFile(filename=f"emd_{numeric_id}.png")
         figure._emdb_id = emdb_id
 
         xml_file = EMDBMetadataXMLFile(filename=f"emd-{numeric_id}-v30.xml")

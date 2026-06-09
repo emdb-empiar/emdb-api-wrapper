@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABC
+from pathlib import Path
 from typing import Optional, Dict
 
 import requests
@@ -19,7 +20,6 @@ class BaseFile(BaseModel, ABC):
 
     _BASE_FTP_URL: str = PrivateAttr("https://ftp.ebi.ac.uk/pub/databases/emdb/structures")
     _BASE_PDB_URL: str = PrivateAttr("https://www.ebi.ac.uk/pdbe/entry-files/download")
-    _BASE_FIGURES_URL: str = PrivateAttr("https://www.ebi.ac.uk/emdb/images/entry")
 
     @property
     @abstractmethod
@@ -50,16 +50,29 @@ class BaseFile(BaseModel, ABC):
 
         :param output_path: The local path where the file should be saved.
         """
-        # If output_path is a directory, append the filename
-        if output_path.endswith('/'):
-            output_path += self.filename
+        destination = Path(output_path)
+
+        # If output_path is a directory, append a plain filename only.
+        if output_path.endswith('/') or destination.is_dir():
+            safe_filename = Path(self.filename).name
+            if (
+                not safe_filename
+                or safe_filename != self.filename
+                or "/" in self.filename
+                or "\\" in self.filename
+            ):
+                raise ValueError(f"Unsafe filename for download: {self.filename!r}")
+
+            output_dir = destination.resolve()
+            destination = (output_dir / safe_filename).resolve()
+            destination.relative_to(output_dir)
 
         response = requests.get(self.source_path)
         print("Path",self.source_path)
         if response.status_code == 200:
-            with open(output_path, 'wb') as f:
+            with open(destination, 'wb') as f:
                 f.write(response.content)
-            print(f"Downloaded {self.filename} to {output_path}")
+            print(f"Downloaded {self.filename} to {destination}")
         else:
             raise EMDBFileNotFoundError(self._emdb_id, self.filename)
 
@@ -236,7 +249,7 @@ class FigureFile(BaseFile):
         Abstract property to get the source path of the file.
         Must be implemented in subclasses.
         """
-        return f"{self._BASE_FIGURES_URL}/{self._emdb_id}/{self.filename}"
+        return f"{self._BASE_FTP_URL}/{self._emdb_id}/images/{self.filename}"
 
     def __str__(self):
         return f"<FigureFile filename={self.filename}>"
@@ -290,4 +303,3 @@ class EMDBMetadataCIFFile(BaseFile):
 
     def __str__(self):
         return f"<EMDBMetadataCIFFile filename={self.filename}>"
-

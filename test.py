@@ -2,7 +2,7 @@ from emdb.client import EMDB
 
 client = EMDB()
 
-entry = client.get_entry("EMD-51324")
+entry = client.get_entry("EMD-8117")
 print(entry.admin["current_status"]["code"]["valueOf_"])
 # entry = client.get_entry("EMD-45474") # Example with annotations
 # entry = client.get_entry("EMD-45369")  # Example with additional maps
@@ -14,7 +14,7 @@ print(entry.admin["current_status"]["code"]["valueOf_"])
 # file.download("/Users/neli/Downloads/")
 
 # print(entry.deposited_files)
-# entry.download_all_files("/Users/neli/Downloads/test_wrapper/")
+entry.download_all_files("/Users/neli/Downloads/test_wrapper/")
 
 # annotations = entry.get_annotations()
 #

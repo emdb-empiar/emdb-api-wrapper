@@ -177,7 +177,7 @@ You can access the list of available files via the `deposited_files` attribute:
 .. code-block:: text
 
     [<PrimaryMapFile filename=emd_8117.map.gz, size_kbytes=28312.0, format=CCP4>,
-    <FigureFile filename=400_8117.gif>,
+    <FigureFile filename=emd_8117.png>,
     <HalfMapFile filename=emd_8117_half_map_1.map.gz, size_kbytes=28312.0, format=CCP4>,
     <HalfMapFile filename=emd_8117_half_map_2.map.gz, size_kbytes=28312.0, format=CCP4>,
     <ModelCifFile pdb_id=5irx filename=5irx_updated.cif>]
